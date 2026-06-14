@@ -1,6 +1,6 @@
 import logging
 
-from app.ai.base import AIMessage, MockAIProvider
+from app.ai.base import AIMessage, LLMNetworkError, LLMResponseError, MockAIProvider
 from app.ai.gemini_provider import GeminiProvider
 from app.ai.grok_provider import GrokProvider
 from app.config import get_settings
@@ -36,6 +36,48 @@ async def generate_text_with_fallback(
     if fallback_text is not None:
         return fallback_text
     return await mock.generate(messages, complex_case=complex_case)
+
+
+async def generate_chat_reply(
+    messages: list[AIMessage],
+    *,
+    complex_case: bool = False,
+) -> str:
+    """Generate a chat reply, raising LLMNetworkError or LLMResponseError when all providers fail.
+
+    Unlike generate_text_with_fallback, this function does not swallow errors — callers
+    are expected to catch and translate them into user-facing messages.
+    """
+    settings = get_settings()
+    had_network_error = False
+    had_response_error = False
+
+    if settings.ai_provider == "mock":
+        return await MockAIProvider().generate(messages, complex_case=complex_case)
+
+    if settings.gemini_api_key:
+        try:
+            return await GeminiProvider().generate(messages, complex_case=complex_case)
+        except LLMNetworkError as exc:
+            had_network_error = True
+            logger.warning("Gemini network error: %s", exc)
+        except Exception as exc:
+            had_response_error = True
+            logger.warning("Gemini generation failed: %s", exc)
+
+    if settings.ai_enable_grok_fallback and settings.grok_api_key:
+        try:
+            return await GrokProvider().generate(messages, complex_case=complex_case)
+        except LLMNetworkError as exc:
+            had_network_error = True
+            logger.warning("Grok network error: %s", exc)
+        except Exception as exc:
+            had_response_error = True
+            logger.warning("Grok fallback failed: %s", exc)
+
+    if had_response_error:
+        raise LLMResponseError("All LLM providers returned an error or unexpected response.")
+    raise LLMNetworkError("All LLM providers are unreachable.")
 
 
 async def transcribe_audio_with_gemini(*, audio_base64: str, mime_type: str) -> str:

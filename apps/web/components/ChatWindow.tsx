@@ -18,18 +18,15 @@ export function ChatWindow() {
   const sensitive = chat.lastResponse?.category === "workplace_harassment_women";
   const chatboxRef = useRef<HTMLDivElement | null>(null);
   const latestMessageRef = useRef<HTMLDivElement | null>(null);
+  const chatEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (!chat.messages.length || chat.isLoading) return;
-    window.requestAnimationFrame(() => {
-      const chatbox = chatboxRef.current;
-      const latest = latestMessageRef.current;
-      if (!chatbox || !latest) return;
-      const chatboxRect = chatbox.getBoundingClientRect();
-      const latestRect = latest.getBoundingClientRect();
-      chatbox.scrollTo({ top: chatbox.scrollTop + latestRect.top - chatboxRect.top - 8, behavior: "smooth" });
-      latest.focus({ preventScroll: true });
+    if (!chat.messages.length) return;
+    const frame = window.requestAnimationFrame(() => {
+      chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+      latestMessageRef.current?.focus({ preventScroll: true });
     });
+    return () => window.cancelAnimationFrame(frame);
   }, [chat.messages, chat.isLoading]);
 
   return (
@@ -88,6 +85,7 @@ export function ChatWindow() {
             </div>
           ))}
           {chat.isLoading ? <LoadingState /> : null}
+          <div ref={chatEndRef} aria-hidden="true" />
         </div>
 
         <MessageInput disabled={chat.isLoading} onSend={chat.send} onVoice={chat.sendVoice} />

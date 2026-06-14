@@ -1,6 +1,6 @@
 import httpx
 
-from app.ai.base import AIMessage, AIProvider, AIProviderUnavailable
+from app.ai.base import AIMessage, AIProvider, AIProviderUnavailable, LLMNetworkError, LLMResponseError
 from app.config import get_settings
 
 
@@ -24,17 +24,26 @@ class GeminiProvider(AIProvider):
         if system_instruction:
             body["system_instruction"] = {"parts": [{"text": system_instruction}]}
 
-        async with httpx.AsyncClient(timeout=30) as client:
-            response = await client.post(
-                url,
-                headers={"x-goog-api-key": self.settings.gemini_api_key},
-                json=body,
-            )
-            response.raise_for_status()
-            payload = response.json()
+        try:
+            async with httpx.AsyncClient(timeout=30) as client:
+                response = await client.post(
+                    url,
+                    headers={"x-goog-api-key": self.settings.gemini_api_key},
+                    json=body,
+                )
+                response.raise_for_status()
+                payload = response.json()
+        except (httpx.ConnectError, httpx.TimeoutException) as exc:
+            raise LLMNetworkError(f"Gemini unreachable: {exc}") from exc
+        except httpx.HTTPStatusError as exc:
+            raise LLMResponseError(
+                f"Gemini API error {exc.response.status_code}"
+            ) from exc
+        except Exception as exc:
+            raise LLMResponseError(f"Gemini request failed: {exc}") from exc
         candidates = payload.get("candidates") or []
         if not candidates:
-            raise AIProviderUnavailable("Gemini returned no candidates.")
+            raise LLMResponseError("Gemini returned no candidates.")
         return candidates[0]["content"]["parts"][0].get("text", "")
 
     async def transcribe_audio(self, *, audio_base64: str, mime_type: str, prompt: str | None = None) -> str:

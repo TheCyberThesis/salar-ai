@@ -2,9 +2,9 @@ import json
 import logging
 from typing import Any
 
-from app.ai.base import AIMessage
+from app.ai.base import AIMessage, LLMNetworkError, LLMResponseError
 from app.ai.prompts import REPORT_PROMPT, SYSTEM_PROMPT
-from app.ai.provider_factory import generate_text_with_fallback
+from app.ai.provider_factory import generate_chat_reply, generate_text_with_fallback
 
 logger = logging.getLogger(__name__)
 
@@ -147,6 +147,8 @@ async def generate_guidance_reply(
         return fallback_reply
     if stage == "ready_to_generate":
         return fallback_reply
+    if missing_fields:
+        return fallback_reply
 
     language_instruction = _language_instruction(detected_language)
     source_notes = [
@@ -192,11 +194,15 @@ User message:
 Return only the user-facing reply.
 """.strip()
 
-    generated = await generate_text_with_fallback(
-        [AIMessage("system", SYSTEM_PROMPT), AIMessage("user", prompt)],
-        complex_case=category == "workplace_harassment_women",
-        fallback_text=fallback_reply,
-    )
+    try:
+        generated = await generate_chat_reply(
+            [AIMessage("system", SYSTEM_PROMPT), AIMessage("user", prompt)],
+            complex_case=category == "workplace_harassment_women",
+        )
+    except LLMNetworkError:
+        return "Salar AI is unable to reach the AI service right now. Please try again in a moment."
+    except Exception:
+        return "The AI is currently busy. Please try again shortly."
     return generated.strip() or fallback_reply
 
 
@@ -219,30 +225,52 @@ def _extract_json_object(text: str) -> dict[str, Any] | None:
 
 async def enhance_report_with_ai(report: dict[str, Any], session: dict[str, Any]) -> dict[str, Any]:
     language_instruction = _language_instruction(session.get("detected_language"))
+    draft_language = (
+        report.get("user_provided_details", {}).get("draft_language")
+        or session.get("detected_language")
+        or "english"
+    )
+    report_context = dict(report)
+    report_context.pop("complaint_draft", None)
+    report_context["user_provided_details_for_draft"] = session.get("collected_data", {})
     prompt = f"""
 {REPORT_PROMPT}
 
 {language_instruction}
 
-Improve only the summary for this civic guidance report.
-Do not change the complaint draft, procedures, departments, recipient, office, source notes, proof reminders, or legal/public guidance disclaimers.
+Rewrite the final report's summary and complaint/application draft using the report JSON.
+
+The complaint_draft MUST be a polished official application, not a copy of the user's raw words.
+Use a respectful Pakistani civic/police application tone.
+Preserve all user-provided facts exactly: locations, route, dates/times, vehicle/bike details, CCTV details, phone/device details, applicant details, and reference numbers.
+If a fact is not provided, do not invent it and do not add placeholders.
+Keep the already resolved office/recipient/department from the report JSON.
+Keep the draft language as: {draft_language}.
+
+Do not change procedures, departments, recipient, office, source notes, proof reminders, maps links, or legal/public guidance disclaimers.
 Do not invent facts. Use only the report JSON.
-Return strict JSON with exactly this string key: "summary".
+Return strict JSON with exactly these string keys: "summary", "complaint_draft".
 
 Report JSON:
-{json.dumps(report, ensure_ascii=False)}
+{json.dumps(report_context, ensure_ascii=False)}
 """.strip()
 
-    generated = await generate_text_with_fallback(
+    generated = await generate_chat_reply(
         [AIMessage("system", SYSTEM_PROMPT), AIMessage("user", prompt)],
         complex_case=report.get("category") == "workplace_harassment_women",
     )
     parsed = _extract_json_object(generated)
     if not parsed:
-        logger.info("AI report enhancement did not return parseable JSON; using deterministic report.")
-        return report
+        logger.warning("AI report enhancement did not return parseable JSON.")
+        raise LLMResponseError("AI report generation returned invalid JSON.")
 
     summary = parsed.get("summary")
-    if isinstance(summary, str) and summary.strip():
-        report["summary"] = summary.strip()
+    complaint_draft = parsed.get("complaint_draft")
+    if not isinstance(summary, str) or not summary.strip():
+        raise LLMResponseError("AI report generation returned an empty summary.")
+    if not isinstance(complaint_draft, str) or not complaint_draft.strip():
+        raise LLMResponseError("AI report generation returned an empty complaint draft.")
+
+    report["summary"] = summary.strip()
+    report["complaint_draft"] = complaint_draft.strip()
     return report

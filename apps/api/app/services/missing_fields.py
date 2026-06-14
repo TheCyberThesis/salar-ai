@@ -153,6 +153,18 @@ FIELD_QUESTIONS: dict[str, str] = {
 }
 
 
+WORKPLACE_INTERVIEW_FIELDS = [
+    "immediate_safety_risk",
+    "complainant_name",
+    "workplace_name",
+    "nature_of_issue_high_level",
+    "incident_dates",
+    "accused_role",
+    "evidence_or_witnesses",
+    "internal_committee_available",
+]
+
+
 INCIDENT_TERMS = {
     "lost",
     "phone",
@@ -165,6 +177,22 @@ INCIDENT_TERMS = {
     "gum",
     "bill",
     "harassment",
+}
+
+
+YES_NO_VALUES = {
+    "yes": "yes",
+    "y": "yes",
+    "yeah": "yes",
+    "yep": "yes",
+    "haan": "yes",
+    "han": "yes",
+    "no": "no",
+    "n": "no",
+    "nope": "no",
+    "nah": "no",
+    "nahi": "no",
+    "nahin": "no",
 }
 
 
@@ -199,6 +227,48 @@ def _looks_like_person_name(line: str) -> bool:
     if any(term in lower for term in ["english", "urdu", "roman", "jazz", "zong", "telenor", "ufone", "samsung", "redmi", "iphone"]):
         return False
     return bool(re.fullmatch(r"[A-Za-z][A-Za-z .'-]{2,70}", line.strip()))
+
+
+def _normalize_yes_no(value: str) -> str:
+    lower = value.lower().strip().rstrip(".")
+    return YES_NO_VALUES.get(lower, value.strip())
+
+
+def _fill_workplace_harassment_fields(lines: list[str], lower: str, updated: dict[str, Any]) -> None:
+    if not lines:
+        return
+
+    missing_interview_fields = [field for field in WORKPLACE_INTERVIEW_FIELDS if not updated.get(field)]
+    if len(lines) >= 2:
+        for field, answer in zip(missing_interview_fields, lines):
+            if field in {"immediate_safety_risk", "internal_committee_available"}:
+                updated[field] = _normalize_yes_no(answer)
+            else:
+                updated[field] = answer.strip()
+    elif len(lines) == 1:
+        answer = lines[0].strip()
+        normalized = _normalize_yes_no(answer)
+        if normalized in {"yes", "no"} and not updated.get("immediate_safety_risk"):
+            updated["immediate_safety_risk"] = normalized
+        elif normalized in {"yes", "no"} and not updated.get("internal_committee_available"):
+            updated["internal_committee_available"] = normalized
+        elif len(missing_interview_fields) == 1:
+            field = missing_interview_fields[0]
+            updated[field] = normalized if field in {"immediate_safety_risk", "internal_committee_available"} else answer
+
+    if not updated.get("evidence_or_witnesses") and any(
+        term in lower
+        for term in ["video", "recording", "audio", "screenshot", "message", "email", "witness", "proof", "evidence"]
+    ):
+        updated["evidence_or_witnesses"] = lines[0].strip()
+
+    if not updated.get("internal_committee_available"):
+        committee_match = re.search(
+            r"\b(yes|no|yeah|yep|nope|nah|haan|han|nahi|nahin)\b.*\binternal\b.*\bcommittee\b",
+            lower,
+        )
+        if committee_match:
+            updated["internal_committee_available"] = _normalize_yes_no(committee_match.group(1))
 
 
 def infer_fields_from_message(message: str, existing: dict[str, Any], subcategory: str | None) -> dict[str, Any]:
@@ -306,6 +376,9 @@ def infer_fields_from_message(message: str, existing: dict[str, Any], subcategor
             if _looks_like_person_name(line):
                 updated["applicant_name"] = line.strip()
                 break
+
+    if subcategory == "workplace_harassment_women":
+        _fill_workplace_harassment_fields(lines, lower, updated)
 
     updated["latest_user_message"] = text
     return updated

@@ -18,6 +18,14 @@ class AIProviderUnavailable(RuntimeError):
     """Raised when a configured provider cannot be used for this request."""
 
 
+class LLMNetworkError(RuntimeError):
+    """All LLM providers were unreachable (connection / timeout failure)."""
+
+
+class LLMResponseError(RuntimeError):
+    """An LLM provider responded but returned an invalid or unexpected result."""
+
+
 class MockAIProvider(AIProvider):
     async def generate(self, messages: list[AIMessage], *, complex_case: bool = False) -> str:
         return (

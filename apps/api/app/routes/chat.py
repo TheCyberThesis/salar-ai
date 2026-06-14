@@ -8,7 +8,7 @@ from app.rag.retriever import retrieve_knowledge
 from app.schemas import ChatRequest, ChatResponse
 from app.services.ai_assistant import extract_fields_with_llm, generate_guidance_reply
 from app.services.complaint_classifier import classify_complaint
-from app.services.missing_fields import REQUIRED_FIELDS, get_missing_fields, questions_for_fields
+from app.services.missing_fields import REQUIRED_FIELDS, get_missing_fields, infer_fields_from_message, questions_for_fields
 from app.services.rate_limiter import rate_limiter
 
 router = APIRouter(prefix="/api", tags=["chat"])
@@ -93,6 +93,9 @@ async def process_chat_message(payload: ChatRequest) -> ChatResponse:
             session["collected_data"]["city"] = location["city"]
 
     session["messages"].append({"role": "user", "content": payload.message, "created_at": now})
+    session["collected_data"] = infer_fields_from_message(
+        payload.message, session.get("collected_data", {}), session.get("subcategory")
+    )
     session["collected_data"] = await extract_fields_with_llm(
         message=payload.message,
         existing_data=session.get("collected_data", {}),

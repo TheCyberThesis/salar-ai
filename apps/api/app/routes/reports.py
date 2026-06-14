@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
+from app.ai.base import LLMNetworkError, LLMResponseError
 from app.database import memory_store, persist_generated_report
 from app.maps.google_maps import find_relevant_department_location
 from app.schemas import GenerateReportRequest, ReportResponse
@@ -35,7 +36,18 @@ async def generate(payload: GenerateReportRequest) -> ReportResponse:
         area=data.get("last_known_location") or location.get("area"),
     )
     report = apply_department_location(report, department_location, session)
-    report = await enhance_report_with_ai(report, session)
+    try:
+        report = await enhance_report_with_ai(report, session)
+    except LLMNetworkError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail="AI report generation is unavailable right now. Please try again when Gemini or the configured fallback provider is reachable.",
+        ) from exc
+    except LLMResponseError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail="AI report generation failed because the configured LLM provider rejected or returned an invalid response. Please check Gemini/Grok quota, model, and API-key configuration.",
+        ) from exc
     memory_store.reports[report["report_id"]] = report
     persist_generated_report(report, session, payload.user_id)
     return ReportResponse(**report)
