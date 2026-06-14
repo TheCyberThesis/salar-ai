@@ -2,16 +2,18 @@ import { FileText } from "lucide-react";
 
 export function RequiredDocumentsList({ documents }: { documents: string[] }) {
   return (
-    <section className="rounded-lg border border-civic-line bg-white p-5">
+    <section className="card p-5">
       <div className="mb-4 flex items-center gap-2">
-        <FileText className="h-5 w-5 text-civic-blue" aria-hidden="true" />
-        <h2 className="font-heading text-lg font-bold text-civic-ink">Required Documents</h2>
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-civic-blue/10 ring-1 ring-civic-blue/20">
+          <FileText className="h-4 w-4 text-civic-blue" aria-hidden="true" />
+        </span>
+        <h2 className="font-heading text-base font-bold text-civic-text">Required Documents</h2>
       </div>
       <ul className="space-y-2 text-sm leading-6 text-civic-muted">
-        {documents.map((document) => (
-          <li key={document} className="flex gap-2">
-            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-civic-green" />
-            {document}
+        {documents.map((doc) => (
+          <li key={doc} className="flex items-start gap-2.5">
+            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-civic-blue/60" />
+            {doc}
           </li>
         ))}
       </ul>

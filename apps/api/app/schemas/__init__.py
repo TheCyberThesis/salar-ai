@@ -3,11 +3,14 @@ from app.schemas.complaints import (
     ChatResponse,
     ClassifyRequest,
     ClassifyResponse,
+    DepartmentLocation,
     DepartmentResponse,
     FeedbackRequest,
     FeedbackResponse,
     GenerateReportRequest,
     ReportResponse,
+    VoiceChatRequest,
+    VoiceChatResponse,
 )
 
 __all__ = [
@@ -15,9 +18,12 @@ __all__ = [
     "ChatResponse",
     "ClassifyRequest",
     "ClassifyResponse",
+    "DepartmentLocation",
     "DepartmentResponse",
     "FeedbackRequest",
     "FeedbackResponse",
     "GenerateReportRequest",
     "ReportResponse",
+    "VoiceChatRequest",
+    "VoiceChatResponse",
 ]

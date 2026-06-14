@@ -14,6 +14,10 @@ class AIProvider(ABC):
         raise NotImplementedError
 
 
+class AIProviderUnavailable(RuntimeError):
+    """Raised when a configured provider cannot be used for this request."""
+
+
 class MockAIProvider(AIProvider):
     async def generate(self, messages: list[AIMessage], *, complex_case: bool = False) -> str:
         return (

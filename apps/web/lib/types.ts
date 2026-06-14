@@ -16,6 +16,17 @@ export type SourceNote = {
   confidence_level: string;
 };
 
+export type DepartmentLocation = {
+  place_name?: string | null;
+  address?: string | null;
+  phone_number?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  google_maps_place_id?: string | null;
+  maps_link: string;
+  notes?: string | null;
+};
+
 export type ChatResponse = {
   session_id: string;
   reply: string;
@@ -26,6 +37,11 @@ export type ChatResponse = {
   detected_language: string;
   follow_up_questions: string[];
   sources: SourceNote[];
+};
+
+export type VoiceChatResponse = {
+  transcript: string;
+  chat: ChatResponse;
 };
 
 export type ChatMessage = {
@@ -41,7 +57,10 @@ export type ReportResponse = {
   summary: string;
   category: SupportedDomain;
   subcategory?: string | null;
+  issue_type: string;
   department: string;
+  reporting_office: string;
+  report_recipient: string;
   user_provided_details: Record<string, unknown>;
   missing_information: string[];
   required_documents: string[];
@@ -49,6 +68,7 @@ export type ReportResponse = {
   complaint_draft: string;
   where_to_submit: string;
   maps_link: string;
+  department_location?: DepartmentLocation | null;
   proof_to_collect: string[];
   timeline: string;
   escalation_steps: string[];

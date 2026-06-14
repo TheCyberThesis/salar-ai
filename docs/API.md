@@ -67,6 +67,43 @@ Response:
 }
 ```
 
+## `POST /api/voice-message`
+
+Transcribes a browser-recorded voice message with Gemini, then processes the transcript through the normal chat flow.
+
+Request:
+
+```json
+{
+  "session_id": "optional-uuid",
+  "audio_base64": "base64-audio-bytes",
+  "mime_type": "audio/webm",
+  "user_location": {
+    "city": "Islamabad",
+    "area": "G-10"
+  }
+}
+```
+
+Response:
+
+```json
+{
+  "transcript": "Mera phone kho gaya hai",
+  "chat": {
+    "session_id": "uuid",
+    "reply": "I can help with this...",
+    "stage": "collecting_missing_info",
+    "missing_fields": ["incident_type", "imei"],
+    "category": "lost_or_stolen_vehicle_device",
+    "subcategory": "lost_phone",
+    "detected_language": "roman_urdu",
+    "follow_up_questions": [],
+    "sources": []
+  }
+}
+```
+
 ## `POST /api/generate-report`
 
 Request:
@@ -86,10 +123,23 @@ Response contains the full report:
   "summary": "Guidance for lost_phone.",
   "category": "lost_or_stolen_vehicle_device",
   "subcategory": "lost_phone",
+  "issue_type": "Lost mobile phone report",
   "department": "Nearest police station...",
+  "reporting_office": "Model Police Station Ramna",
+  "report_recipient": "Station House Officer (SHO)",
   "required_documents": [],
   "complaint_draft": "...",
   "maps_link": "https://www.google.com/maps/search/...",
+  "department_location": {
+    "place_name": "Police Station ...",
+    "address": "Street address from Google Places",
+    "phone_number": "optional phone number from Google Places",
+    "latitude": 33.123,
+    "longitude": 73.123,
+    "google_maps_place_id": "places/...",
+    "maps_link": "https://maps.google.com/...",
+    "notes": "Confirm office jurisdiction, phone number, and timings before visiting."
+  },
   "timeline": "...",
   "escalation_steps": [],
   "sources_used": [],

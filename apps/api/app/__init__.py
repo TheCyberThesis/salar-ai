@@ -1,1 +1,1 @@
-"""Salaar AI FastAPI backend."""
+"""Salar AI FastAPI backend."""

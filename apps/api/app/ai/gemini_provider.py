@@ -1,33 +1,76 @@
 import httpx
 
-from app.ai.base import AIMessage, AIProvider, MockAIProvider
+from app.ai.base import AIMessage, AIProvider, AIProviderUnavailable
 from app.config import get_settings
 
 
 class GeminiProvider(AIProvider):
     def __init__(self) -> None:
         self.settings = get_settings()
-        self.mock = MockAIProvider()
 
     async def generate(self, messages: list[AIMessage], *, complex_case: bool = False) -> str:
         if not self.settings.gemini_api_key:
-            return await self.mock.generate(messages, complex_case=complex_case)
+            raise AIProviderUnavailable("Gemini API key is not configured.")
 
         model = self.settings.gemini_complex_model if complex_case else self.settings.gemini_default_model
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+        system_instruction = "\n\n".join(msg.content for msg in messages if msg.role == "system")
         contents = [
             {"role": "user" if msg.role != "assistant" else "model", "parts": [{"text": msg.content}]}
             for msg in messages
+            if msg.role != "system"
         ]
+        body: dict[str, object] = {"contents": contents}
+        if system_instruction:
+            body["system_instruction"] = {"parts": [{"text": system_instruction}]}
+
         async with httpx.AsyncClient(timeout=30) as client:
             response = await client.post(
                 url,
-                params={"key": self.settings.gemini_api_key},
-                json={"contents": contents},
+                headers={"x-goog-api-key": self.settings.gemini_api_key},
+                json=body,
             )
             response.raise_for_status()
             payload = response.json()
         candidates = payload.get("candidates") or []
         if not candidates:
-            return await self.mock.generate(messages, complex_case=complex_case)
+            raise AIProviderUnavailable("Gemini returned no candidates.")
         return candidates[0]["content"]["parts"][0].get("text", "")
+
+    async def transcribe_audio(self, *, audio_base64: str, mime_type: str, prompt: str | None = None) -> str:
+        if not self.settings.gemini_api_key:
+            raise AIProviderUnavailable("Gemini API key is not configured.")
+
+        instruction = prompt or (
+            "Transcribe this Pakistani civic complaint voice message. "
+            "Preserve Roman Urdu when the speaker uses Roman Urdu. "
+            "Return only the transcript text, without commentary."
+        )
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.settings.gemini_audio_model}:generateContent"
+        body = {
+            "contents": [
+                {
+                    "role": "user",
+                    "parts": [
+                        {"text": instruction},
+                        {"inline_data": {"mime_type": mime_type, "data": audio_base64}},
+                    ],
+                }
+            ]
+        }
+        async with httpx.AsyncClient(timeout=60) as client:
+            response = await client.post(
+                url,
+                headers={"x-goog-api-key": self.settings.gemini_api_key},
+                json=body,
+            )
+            response.raise_for_status()
+            payload = response.json()
+        candidates = payload.get("candidates") or []
+        if not candidates:
+            raise AIProviderUnavailable("Gemini returned no audio transcript candidates.")
+        parts = candidates[0].get("content", {}).get("parts", [])
+        transcript = " ".join(part.get("text", "") for part in parts).strip()
+        if not transcript:
+            raise AIProviderUnavailable("Gemini returned an empty audio transcript.")
+        return transcript

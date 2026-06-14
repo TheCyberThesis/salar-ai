@@ -1,4 +1,5 @@
 from typing import Any
+from datetime import date
 
 
 def _value(data: dict[str, Any], key: str, fallback: str = "[not provided]") -> str:
@@ -6,31 +7,65 @@ def _value(data: dict[str, Any], key: str, fallback: str = "[not provided]") -> 
     return str(value) if value else fallback
 
 
-def generate_complaint_draft(subcategory: str | None, data: dict[str, Any]) -> str:
+def _line(label: str, value: str) -> str:
+    return f"- {label}: {value}"
+
+
+def generate_complaint_draft(
+    subcategory: str | None,
+    data: dict[str, Any],
+    *,
+    reporting_office: str | None = None,
+    report_recipient: str | None = None,
+    office_address: str | None = None,
+) -> str:
     if subcategory in {"lost_phone", "stolen_phone", "lost_bike", "stolen_bike", "lost_car", "stolen_car"}:
         item = "mobile phone" if "phone" in subcategory else "vehicle"
-        subject = f"Application for report of {'stolen' if 'stolen' in subcategory else 'lost'} {item}"
+        incident_word = "snatched/stolen" if data.get("incident_type") == "stolen" or "stolen" in subcategory else "lost"
+        subject = f"Application for report of {incident_word} {item}"
+        office = reporting_office or "Relevant Police Station"
+        recipient = report_recipient or "Station House Officer"
+        provided_details = [
+            _line("Applicant name", _value(data, "applicant_name")),
+            _line("Applicant contact", _value(data, "applicant_contact")),
+            _line("Incident type", incident_word),
+            _line("Incident location", _value(data, "last_known_location")),
+            _line("Incident date/time", _value(data, "incident_date_time")),
+            _line("Incident description", _value(data, "incident_description")),
+            _line("City", _value(data, "city")),
+            _line("Phone/vehicle model", _value(data, "phone_model", _value(data, "vehicle_model_color"))),
+            _line("IMEI/registration number", _value(data, "imei", _value(data, "vehicle_registration_number"))),
+            _line("SIM/operator", _value(data, "sim_number_or_operator")),
+        ]
+        action_request = (
+            "register my complaint/FIR or other applicable police report, take action according to law, and issue me a diary number, "
+            "complaint number, FIR/reference number, or stamped receiving copy"
+            if incident_word == "snatched/stolen"
+            else "record my loss report and issue me a diary number, complaint/report number, or stamped receiving copy"
+        )
         return f"""To,
-The Station House Officer,
-Relevant Police Station,
+The {recipient},
+{office},
 {_value(data, "city")}
+{office_address or ""}
 
 Subject: {subject}
 
 Respected Sir/Madam,
 
-I, {_value(data, "applicant_name")}, request registration/recording of a report regarding my {item}. The incident was {_value(data, "incident_type")} near {_value(data, "last_known_location")} on/around {_value(data, "incident_date_time")}.
+I, {_value(data, "applicant_name")}, respectfully submit that my {item} was {incident_word} near {_value(data, "last_known_location")} on/around {_value(data, "incident_date_time")}.
 
-Item details:
-- Phone/vehicle model: {_value(data, "phone_model", _value(data, "vehicle_model_color"))}
-- IMEI/registration number: {_value(data, "imei", _value(data, "vehicle_registration_number"))}
-- SIM/operator if relevant: {_value(data, "sim_number_or_operator")}
+Incident narrative:
+{_value(data, "incident_description")}
 
-I request that my complaint/report be received and that a diary number, complaint number, report number, or FIR/reference number be issued as applicable.
+Details already collected:
+{chr(10).join(provided_details)}
+
+I request you to kindly {action_request}. I also need the official report/reference for blocking the SIM(s), blocking the IMEI/device through the relevant channels, and protecting my personal data.
 
 Applicant signature: __________________
-Contact number: __________________
-Date: __________________
+Contact number: {_value(data, "applicant_contact")}
+Date: {date.today().isoformat()}
 """
 
     if subcategory in {"electricity_bill_overcharging", "gas_bill_overcharging", "water_bill_overcharging"}:

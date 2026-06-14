@@ -1,114 +1,177 @@
-import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, FileQuestion, Landmark, MessageSquareText } from "lucide-react";
+import { ArrowRight, CheckCircle2, FileText, MessageSquareText, Terminal, Zap } from "lucide-react";
 
-import { DisclaimerBanner } from "@/components/DisclaimerBanner";
 import { QuickIssueCards } from "@/components/QuickIssueCards";
 
 const steps = [
-  "Tell us your issue",
-  "Salaar AI asks missing details",
-  "Get department guidance and complaint draft",
-  "Submit complaint and collect proof/token/report number"
+  { num: "01", title: "Describe your issue", body: "Type in English, Urdu, or Roman Urdu. Salar AI detects the domain automatically." },
+  { num: "02", title: "Answer follow-up questions", body: "AI asks only the missing details needed to generate a complete application." },
+  { num: "03", title: "Get a filled guidance report", body: "Department, procedure, complaint draft, nearest office, and proof checklist — all generated." },
+  { num: "04", title: "Submit and collect proof", body: "Visit the relevant office and collect your diary number, FIR, or reference receipt." },
+];
+
+const domains = [
+  "Lost/stolen phone, bike, or car",
+  "Utility bill overcharging",
+  "Workplace harassment against women",
 ];
 
 export default function HomePage() {
   return (
-    <main>
-      <section className="relative min-h-[calc(100vh-7rem)] overflow-hidden bg-civic-ink text-white">
-        <Image
-          src="/civic-guidance-hero.png"
-          alt="Civic service desk and mobile guidance interface"
-          fill
-          priority
-          className="object-cover object-center opacity-70"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-civic-ink via-civic-ink/72 to-civic-ink/15" />
-        <div className="relative mx-auto flex min-h-[calc(100vh-7rem)] max-w-7xl flex-col justify-center px-4 pb-24 pt-14 sm:px-6 lg:px-8">
-          <div className="max-w-2xl">
-            <div className="mb-5 inline-flex items-center gap-2 rounded-md border border-white/20 bg-white/10 px-3 py-2 font-mono text-xs uppercase tracking-normal text-white/90 backdrop-blur">
-              <Landmark className="h-4 w-4" aria-hidden="true" />
-              Pakistan civic guidance MVP
-            </div>
-            <h1 className="font-heading text-5xl font-bold tracking-normal sm:text-6xl lg:text-7xl">Salaar AI</h1>
-            <p className="mt-5 max-w-xl text-xl leading-8 text-white/90">AI-powered civic guidance for Pakistani citizens.</p>
-            <p className="mt-4 max-w-xl text-base leading-7 text-white/78">
-              Get help identifying the relevant department, required information, documents, proof to collect, escalation path, and a complaint/application draft.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link className="focus-ring inline-flex items-center gap-2 rounded-md bg-white px-5 py-3 font-bold text-civic-ink shadow-soft hover:bg-civic-mint" href="/chat">
-                Start guidance
-                <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              </Link>
-              <Link className="focus-ring inline-flex items-center gap-2 rounded-md border border-white/30 px-5 py-3 font-bold text-white hover:bg-white/10" href="/dashboard">
-                Dashboard
-              </Link>
-            </div>
+    <main className="min-h-screen">
+
+      {/* ── Hero ──────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden border-b border-civic-border">
+
+        {/* Dot-grid bg */}
+        <div className="civic-grid absolute inset-0 opacity-70" />
+
+        {/* Radial blobs */}
+        <div className="pointer-events-none absolute -left-40 top-0 h-[500px] w-[500px] rounded-full bg-civic-green/[0.04] blur-3xl" />
+        <div className="pointer-events-none absolute -right-32 bottom-0 h-[400px] w-[400px] rounded-full bg-civic-blue/[0.05] blur-3xl" />
+
+        <div className="relative mx-auto max-w-7xl px-4 pb-28 pt-20 sm:px-6 lg:px-8">
+
+          {/* Terminal badge */}
+          <div className="mb-8 inline-flex items-center gap-2.5 rounded-full border border-civic-green/25 bg-civic-green/8 px-4 py-2">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-civic-green shadow-glow-sm" />
+            <span className="font-mono text-[11px] uppercase tracking-widest text-civic-green">Pakistan civic guidance · MVP</span>
           </div>
-        </div>
-        <div className="absolute bottom-0 left-0 right-0 bg-white/94 px-4 py-5 text-civic-ink backdrop-blur">
-          <div className="mx-auto grid max-w-7xl gap-3 sm:grid-cols-3">
-            {["Lost/stolen phone, bike, or car", "Utility bill overcharging", "Workplace harassment against women"].map((item) => (
-              <div key={item} className="flex items-center gap-2 font-mono text-xs">
-                <CheckCircle2 className="h-4 w-4 text-civic-green" aria-hidden="true" />
-                {item}
-              </div>
+
+          {/* Headline */}
+          <div className="mb-6 max-w-3xl">
+            <p className="mb-3 font-mono text-sm font-medium text-civic-muted">
+              <span className="text-civic-green">$</span> ./salar-ai --mode=guidance
+            </p>
+            <h1 className="font-heading text-6xl font-bold leading-none tracking-tight text-civic-text sm:text-7xl lg:text-8xl">
+              Civic<br />
+              <span className="gradient-text">Guidance</span><br />
+              <span className="text-civic-text/40">for Pakistan.</span>
+            </h1>
+          </div>
+
+          <p className="mb-10 max-w-xl text-lg leading-7 text-civic-muted">
+            AI-powered assistance to identify the right department, prepare complaint drafts,
+            and know exactly what proof to collect.
+          </p>
+
+          {/* CTAs */}
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/chat"
+              className="focus-ring group inline-flex items-center gap-2.5 rounded-lg bg-civic-green px-6 py-3.5 font-mono text-sm font-bold uppercase tracking-wider text-white shadow-glow transition-all hover:brightness-110 hover:shadow-glow"
+            >
+              Start guidance
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+            </Link>
+            <Link
+              href="/dashboard"
+              className="focus-ring inline-flex items-center gap-2 rounded-lg border border-civic-border px-6 py-3.5 font-mono text-sm font-bold uppercase tracking-wider text-civic-text transition hover:border-civic-text/30 hover:bg-civic-elevated"
+            >
+              Dashboard
+            </Link>
+          </div>
+
+          {/* Domain tags */}
+          <div className="mt-10 flex flex-wrap gap-2">
+            {domains.map((d) => (
+              <span key={d} className="flex items-center gap-1.5 rounded-full border border-civic-border bg-civic-surface px-3 py-1.5 font-mono text-[11px] text-civic-muted">
+                <CheckCircle2 className="h-3.5 w-3.5 text-civic-green" aria-hidden="true" />
+                {d}
+              </span>
             ))}
           </div>
         </div>
-      </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <DisclaimerBanner />
-      </section>
-
-      <section className="mx-auto grid max-w-7xl gap-8 px-4 pb-14 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">
-        <div>
-          <p className="font-mono text-xs uppercase tracking-normal text-civic-green">MVP domains</p>
-          <h2 className="mt-2 font-heading text-3xl font-bold text-civic-ink">Focused on three high-need civic flows</h2>
-          <p className="mt-4 text-base leading-7 text-civic-muted">
-            The architecture keeps category rules, required fields, RAG sources, maps lookup, and prompts modular so future Pakistani civic domains can be added without reshaping the app.
-          </p>
+        {/* Bottom terminal window decoration */}
+        <div className="relative mx-auto mb-[-1px] max-w-3xl px-4 sm:px-6 lg:px-8">
+          <div className="card overflow-hidden">
+            <div className="flex items-center gap-2 border-b border-[#1a3348] bg-[#101e2c] px-4 py-3">
+              <span className="h-3 w-3 rounded-full bg-red-500/70" />
+              <span className="h-3 w-3 rounded-full bg-amber-400/70" />
+              <span className="h-3 w-3 rounded-full bg-emerald-400/70" />
+              <span className="ml-2 font-mono text-[11px] text-[#4d7080]">salar-ai — guidance session</span>
+            </div>
+            <div className="space-y-2 bg-[#070d14] p-5 font-mono text-sm">
+              <p><span className="text-[#00e87e]">user@pk</span><span className="text-[#4d7080]">:~$</span> <span className="text-[#cde4f2]">Mera phone kho gaya hai</span></p>
+              <p className="text-[#4d7080]">▸ Detecting domain... <span className="text-[#00e87e]">lost_or_stolen_vehicle_device</span></p>
+              <p className="text-[#4d7080]">▸ Loading required fields... <span className="text-[#38b6ff]">11 fields</span></p>
+              <p className="text-[#4d7080]">▸ Salar AI: <span className="text-[#cde4f2]">I can help. Please tell me the full incident, phone model, and location...</span></p>
+              <p className="text-[#00e87e] cursor-blink"></p>
+            </div>
+          </div>
         </div>
-        <QuickIssueCards />
       </section>
 
-      <section className="border-y border-civic-line bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-          <div className="mb-8 flex items-center gap-3">
-            <span className="grid h-11 w-11 place-items-center rounded-lg bg-civic-sky text-civic-blue">
-              <FileQuestion className="h-5 w-5" aria-hidden="true" />
+      {/* ── MVP Domains ────────────────────────────────────────── */}
+      <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+        <div className="mb-12 grid gap-6 lg:grid-cols-[1fr_2fr]">
+          <div>
+            <p className="chip chip-green mb-3">
+              <Zap className="h-3 w-3" />
+              MVP domains
+            </p>
+            <h2 className="font-heading text-3xl font-bold text-civic-text">Three high-need civic flows</h2>
+            <p className="mt-4 text-civic-muted leading-7">
+              Modular architecture — category rules, RAG sources, maps lookup, and prompts are all decoupled so new Pakistani civic domains can be added without reshaping the app.
+            </p>
+          </div>
+          <QuickIssueCards />
+        </div>
+      </section>
+
+      {/* ── How it works ───────────────────────────────────────── */}
+      <section className="border-y border-civic-border bg-civic-surface/40">
+        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+          <div className="mb-12 flex items-center gap-4">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-civic-border bg-civic-elevated">
+              <Terminal className="h-5 w-5 text-civic-blue" aria-hidden="true" />
             </span>
             <div>
-              <p className="font-mono text-xs uppercase tracking-normal text-civic-muted">How it works</p>
-              <h2 className="font-heading text-3xl font-bold text-civic-ink">From issue to usable complaint draft</h2>
+              <p className="chip chip-muted mb-1">Process</p>
+              <h2 className="font-heading text-3xl font-bold text-civic-text">From issue to usable draft</h2>
             </div>
           </div>
-          <div className="grid gap-4 md:grid-cols-4">
-            {steps.map((step, index) => (
-              <div key={step} className="rounded-lg border border-civic-line bg-slate-50 p-5">
-                <div className="mb-5 grid h-9 w-9 place-items-center rounded-md bg-civic-green font-mono text-sm font-bold text-white">{index + 1}</div>
-                <h3 className="font-heading text-lg font-bold text-civic-ink">{step}</h3>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {steps.map((step) => (
+              <div key={step.num} className="card card-hover relative overflow-hidden p-6">
+                <div className="mb-4 font-mono text-4xl font-bold text-civic-green/15 select-none">{step.num}</div>
+                <div className="absolute right-4 top-4 font-mono text-[10px] text-civic-muted">{step.num}</div>
+                <h3 className="mb-2 font-heading text-base font-bold text-civic-text">{step.title}</h3>
+                <p className="text-sm leading-6 text-civic-muted">{step.body}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-12 sm:px-6 lg:px-8">
-        <div className="rounded-lg border border-civic-line bg-civic-ink p-6 text-white">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      {/* ── CTA ────────────────────────────────────────────────── */}
+      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="card card-hover relative overflow-hidden p-8">
+          <div className="pointer-events-none absolute right-0 top-0 h-64 w-64 rounded-full bg-civic-blue/5 blur-2xl" />
+          <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="font-mono text-xs uppercase tracking-normal text-white/70">Demo prompt</p>
-              <p className="mt-2 font-heading text-2xl font-bold">“Mera phone kho gaya hai”</p>
+              <p className="chip chip-muted mb-3">
+                <FileText className="h-3 w-3" />
+                Demo prompt
+              </p>
+              <p className="font-mono text-2xl font-bold text-civic-text">
+                <span className="text-civic-green">&gt;</span>{" "}
+                <span className="text-civic-text">&quot;Mera phone kho gaya hai&quot;</span>
+              </p>
+              <p className="mt-2 font-mono text-sm text-civic-muted">Try this in the chat — Salar AI will guide you through the complaint process.</p>
             </div>
-            <Link className="focus-ring inline-flex items-center justify-center gap-2 rounded-md bg-white px-5 py-3 font-bold text-civic-ink hover:bg-civic-mint" href="/chat">
-              Open chat
+            <Link
+              href="/chat"
+              className="focus-ring inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-civic-blue px-6 py-3.5 font-mono text-sm font-bold uppercase tracking-wider text-white shadow-glow-blue transition hover:brightness-110"
+            >
               <MessageSquareText className="h-4 w-4" aria-hidden="true" />
+              Open chat
             </Link>
           </div>
         </div>
       </section>
+
     </main>
   );
 }

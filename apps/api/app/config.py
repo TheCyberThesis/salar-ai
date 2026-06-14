@@ -6,7 +6,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    app_name: str = "Salaar AI API"
+    app_name: str = "Salar AI API"
     environment: str = "development"
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
 
@@ -18,10 +18,13 @@ class Settings(BaseSettings):
     google_maps_api_key: str | None = None
 
     ai_provider: Literal["gemini", "grok", "mock"] = "gemini"
+    ai_enable_grok_fallback: bool = True
     gemini_api_key: str | None = None
-    gemini_default_model: str = "gemini-3.1-flash-lite"
+    gemini_default_model: str = "gemini-3.5-flash"
     gemini_complex_model: str = "gemini-3.5-flash"
+    gemini_audio_model: str = "gemini-3.5-flash"
     grok_api_key: str | None = None
+    grok_model: str = "grok-4.3"
 
     rate_limit_per_minute: int = 20
 

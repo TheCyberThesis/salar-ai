@@ -47,6 +47,17 @@ class SourceNote(BaseModel):
     confidence_level: str = "official_source_metadata"
 
 
+class DepartmentLocation(BaseModel):
+    place_name: str | None = None
+    address: str | None = None
+    phone_number: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
+    google_maps_place_id: str | None = None
+    maps_link: str
+    notes: str | None = None
+
+
 class ChatResponse(BaseModel):
     session_id: str
     reply: str
@@ -57,6 +68,19 @@ class ChatResponse(BaseModel):
     detected_language: str
     follow_up_questions: list[str] = Field(default_factory=list)
     sources: list[SourceNote] = Field(default_factory=list)
+
+
+class VoiceChatRequest(BaseModel):
+    session_id: str | None = None
+    audio_base64: str = Field(min_length=1, max_length=18_000_000)
+    mime_type: str = Field(default="audio/webm", max_length=80)
+    user_location: UserLocation | None = None
+    user_id: str | None = None
+
+
+class VoiceChatResponse(BaseModel):
+    transcript: str
+    chat: ChatResponse
 
 
 class GenerateReportRequest(BaseModel):
@@ -70,7 +94,10 @@ class ReportResponse(BaseModel):
     summary: str
     category: SupportedDomain
     subcategory: str | None
+    issue_type: str
     department: str
+    reporting_office: str
+    report_recipient: str
     user_provided_details: dict[str, Any]
     missing_information: list[str]
     required_documents: list[str]
@@ -78,6 +105,7 @@ class ReportResponse(BaseModel):
     complaint_draft: str
     where_to_submit: str
     maps_link: str
+    department_location: DepartmentLocation | None = None
     proof_to_collect: list[str]
     timeline: str
     escalation_steps: list[str]

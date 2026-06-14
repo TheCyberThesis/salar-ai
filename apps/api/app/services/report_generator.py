@@ -9,7 +9,7 @@ from app.services.privacy import mask_sensitive_data
 
 
 DISCLAIMER = (
-    "Salaar AI provides AI-powered public guidance for civic and social issues. "
+    "Salar AI provides AI-powered public guidance for civic and social issues. "
     "It is not a substitute for professional legal advice. For serious legal matters, "
     "please consult a qualified lawyer or relevant authority."
 )
@@ -29,6 +29,20 @@ REQUIRED_DOCUMENTS: dict[str, list[str]] = {
 }
 
 
+ISSUE_LABELS: dict[str, str] = {
+    "lost_phone": "Lost mobile phone report",
+    "stolen_phone": "Stolen/snatching mobile phone report",
+    "lost_bike": "Lost motorcycle/vehicle report",
+    "stolen_bike": "Stolen motorcycle/vehicle report",
+    "lost_car": "Lost car/vehicle report",
+    "stolen_car": "Stolen car/vehicle report",
+    "electricity_bill_overcharging": "Electricity bill overcharging complaint",
+    "gas_bill_overcharging": "Gas bill overcharging complaint",
+    "water_bill_overcharging": "Water bill overcharging complaint",
+    "workplace_harassment_women": "Workplace harassment complaint",
+}
+
+
 def _department(subcategory: str | None, data: dict[str, Any]) -> str:
     if not subcategory:
         return "Relevant department"
@@ -43,6 +57,30 @@ def _department(subcategory: str | None, data: dict[str, Any]) -> str:
     if subcategory == "workplace_harassment_women":
         return "Workplace inquiry committee, FOSPAH, or relevant provincial ombudsperson/authority"
     return "Relevant department"
+
+
+def _recipient(subcategory: str | None) -> str:
+    if subcategory in {"lost_phone", "stolen_phone", "lost_bike", "stolen_bike", "lost_car", "stolen_car"}:
+        return "Station House Officer (SHO)"
+    if subcategory in {"electricity_bill_overcharging", "gas_bill_overcharging", "water_bill_overcharging"}:
+        return "Customer Service / Complaint Officer"
+    if subcategory == "workplace_harassment_women":
+        return "Inquiry Committee / Competent Authority"
+    return "Relevant Officer"
+
+
+def _reporting_office(subcategory: str | None, data: dict[str, Any]) -> str:
+    if subcategory in {"lost_phone", "stolen_phone", "lost_bike", "stolen_bike", "lost_car", "stolen_car"}:
+        return "Nearest police station"
+    if subcategory == "electricity_bill_overcharging":
+        return f"{data.get('provider') or 'Electricity distribution company'} complaint/customer service office"
+    if subcategory == "gas_bill_overcharging":
+        return f"{data.get('provider') or 'Gas utility provider'} complaint/customer service office"
+    if subcategory == "water_bill_overcharging":
+        return f"{data.get('provider') or 'Local WASA/water authority'} complaint office"
+    if subcategory == "workplace_harassment_women":
+        return data.get("workplace_name") or "Workplace inquiry committee / competent authority"
+    return "Relevant office"
 
 
 def _procedure(subcategory: str | None) -> list[str]:
@@ -131,38 +169,84 @@ def _escalation(subcategory: str | None) -> list[str]:
 
 
 def generate_report(session: dict[str, Any]) -> dict[str, Any]:
-    data = mask_sensitive_data(session.get("collected_data", {}))
+    raw_data = session.get("collected_data", {})
+    data = mask_sensitive_data(raw_data)
     subcategory = session.get("subcategory")
     category = session.get("category", "unsupported")
     city = data.get("city") or session.get("location", {}).get("city")
-    area = session.get("location", {}).get("area")
+    area = data.get("last_known_location") or session.get("location", {}).get("area")
     knowledge = retrieve_knowledge(category, subcategory, city=city)
     maps_link = build_maps_search_link(subcategory=subcategory, city=city, area=area)
     missing = get_missing_fields(subcategory, data)
     department = _department(subcategory, data)
+    issue_type = ISSUE_LABELS.get(subcategory or "", category.replace("_", " "))
+    reporting_office = _reporting_office(subcategory, data)
+    report_recipient = _recipient(subcategory)
 
     return {
         "report_id": str(uuid4()),
         "session_id": session["id"],
-        "summary": f"Guidance for {subcategory or category}.",
+        "summary": f"{issue_type} for {data.get('last_known_location') or city or 'the relevant area'}.",
         "category": category,
         "subcategory": subcategory,
+        "issue_type": issue_type,
         "department": department,
+        "reporting_office": reporting_office,
+        "report_recipient": report_recipient,
         "user_provided_details": data,
         "missing_information": missing,
         "required_documents": REQUIRED_DOCUMENTS.get(subcategory or "", []),
         "step_by_step_procedure": _procedure(subcategory),
-        "complaint_draft": generate_complaint_draft(subcategory, data),
+        "complaint_draft": generate_complaint_draft(
+            subcategory,
+            raw_data,
+            reporting_office=reporting_office,
+            report_recipient=report_recipient,
+        ),
         "where_to_submit": department,
         "maps_link": maps_link,
+        "department_location": {
+            "place_name": None,
+            "address": None,
+            "phone_number": None,
+            "latitude": None,
+            "longitude": None,
+            "google_maps_place_id": None,
+            "maps_link": maps_link,
+            "notes": "Open the Maps link and confirm the correct department before visiting.",
+        },
         "proof_to_collect": _proof_to_collect(subcategory),
         "timeline": _timeline(subcategory),
         "escalation_steps": _escalation(subcategory),
         "safety_privacy_notes": [
             "Avoid sharing CNIC, phone number, address, IMEI, or evidence publicly.",
             "Share sensitive information only with the relevant authority/provider when required.",
-            "This guidance is based on available official Pakistani public sources in Salaar AI’s knowledge base. Please verify requirements with the relevant department before submitting your complaint.",
+            "This guidance is based on available official Pakistani public sources in Salar AI’s knowledge base. Please verify requirements with the relevant department before submitting your complaint.",
         ],
         "sources_used": knowledge,
         "disclaimer": DISCLAIMER,
     }
+
+
+def apply_department_location(report: dict[str, Any], department_location: dict[str, Any], session: dict[str, Any]) -> dict[str, Any]:
+    data = session.get("collected_data", {})
+    subcategory = session.get("subcategory")
+    place_name = department_location.get("place_name")
+    address = department_location.get("address")
+
+    if place_name:
+        report["reporting_office"] = place_name
+        report["where_to_submit"] = place_name
+
+    report["department_location"] = department_location
+    report["maps_link"] = department_location["maps_link"]
+    report["complaint_draft"] = generate_complaint_draft(
+        subcategory,
+        data,
+        reporting_office=report.get("reporting_office"),
+        report_recipient=report.get("report_recipient"),
+        office_address=address,
+    )
+    if place_name:
+        report["summary"] = f"{report['issue_type']} to be submitted at {place_name}."
+    return report

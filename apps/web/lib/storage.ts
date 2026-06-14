@@ -1,6 +1,6 @@
 import type { ReportResponse } from "@/lib/types";
 
-const REPORTS_KEY = "salaar-ai-reports";
+const REPORTS_KEY = "salar-ai-reports";
 
 export function saveReportToBrowser(report: ReportResponse): void {
   if (typeof window === "undefined") return;

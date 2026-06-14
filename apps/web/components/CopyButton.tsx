@@ -16,9 +16,15 @@ export function CopyButton({ text, label = "Copy" }: { text: string; label?: str
     <button
       type="button"
       onClick={copy}
-      className="focus-ring inline-flex items-center gap-2 rounded-md border border-civic-line bg-white px-3 py-2 text-sm font-semibold text-civic-ink hover:bg-civic-mint"
+      className={`focus-ring inline-flex items-center gap-2 rounded-lg border px-3 py-2 font-mono text-xs font-bold uppercase tracking-wider transition ${
+        copied
+          ? "border-civic-green/30 bg-civic-green/10 text-civic-green"
+          : "border-civic-border bg-civic-elevated text-civic-muted hover:border-civic-muted/40 hover:text-civic-text"
+      }`}
     >
-      {copied ? <Check className="h-4 w-4 text-civic-green" aria-hidden="true" /> : <Copy className="h-4 w-4 text-civic-blue" aria-hidden="true" />}
+      {copied
+        ? <Check className="h-3.5 w-3.5" aria-hidden="true" />
+        : <Copy className="h-3.5 w-3.5" aria-hidden="true" />}
       {copied ? "Copied" : label}
     </button>
   );

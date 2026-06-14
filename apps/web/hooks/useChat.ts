@@ -2,13 +2,13 @@
 
 import { useMemo, useState } from "react";
 
-import { generateReport, sendChatMessage } from "@/lib/api";
+import { generateReport, sendChatMessage, sendVoiceMessage } from "@/lib/api";
 import { saveReportToBrowser } from "@/lib/storage";
 import { supabase } from "@/lib/supabase";
 import type { ChatMessage, ChatResponse, ReportResponse, UserLocation } from "@/lib/types";
 
 const greeting =
-  "Assalam-o-Alaikum. I’m Salaar AI. Tell me your civic issue in English, Urdu, or Roman Urdu, and I’ll guide you step by step.";
+  "Assalam-o-Alaikum. I’m Salar AI. Tell me your civic issue in English, Urdu, or Roman Urdu, and I’ll guide you step by step.";
 
 export function useChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -21,7 +21,15 @@ export function useChat() {
   const [error, setError] = useState<string | null>(null);
   const [location, setLocation] = useState<UserLocation>({ city: "Islamabad", area: "G-10" });
 
-  const canGenerateReport = useMemo(() => Boolean(sessionId && lastResponse?.category !== "unsupported"), [sessionId, lastResponse]);
+  const canGenerateReport = useMemo(
+    () => Boolean(sessionId && lastResponse?.category !== "unsupported" && lastResponse?.stage === "ready_to_generate"),
+    [sessionId, lastResponse]
+  );
+
+  async function getCurrentUserId() {
+    const auth = supabase ? await supabase.auth.getSession() : null;
+    return auth?.data.session?.user.id;
+  }
 
   async function send(message: string) {
     const trimmed = message.trim();
@@ -33,7 +41,8 @@ export function useChat() {
     ]);
     setIsLoading(true);
     try {
-      const response = await sendChatMessage({ sessionId, message: trimmed, userLocation: location });
+      const userId = await getCurrentUserId();
+      const response = await sendChatMessage({ sessionId, message: trimmed, userLocation: location, userId });
       setSessionId(response.session_id);
       setLastResponse(response);
       setMessages((current) => [
@@ -41,7 +50,33 @@ export function useChat() {
         { id: crypto.randomUUID(), role: "assistant", content: response.reply, createdAt: new Date().toISOString() }
       ]);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not reach Salaar AI backend.");
+      setError(err instanceof Error ? err.message : "Could not reach Salar AI backend.");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function sendVoice(audio: { audioBase64: string; mimeType: string }) {
+    setError(null);
+    setIsLoading(true);
+    try {
+      const userId = await getCurrentUserId();
+      const response = await sendVoiceMessage({
+        sessionId,
+        audioBase64: audio.audioBase64,
+        mimeType: audio.mimeType,
+        userLocation: location,
+        userId
+      });
+      setSessionId(response.chat.session_id);
+      setLastResponse(response.chat);
+      setMessages((current) => [
+        ...current,
+        { id: crypto.randomUUID(), role: "user", content: response.transcript, createdAt: new Date().toISOString() },
+        { id: crypto.randomUUID(), role: "assistant", content: response.chat.reply, createdAt: new Date().toISOString() }
+      ]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not process voice message.");
     } finally {
       setIsLoading(false);
     }
@@ -52,8 +87,7 @@ export function useChat() {
     setIsLoading(true);
     setError(null);
     try {
-      const auth = supabase ? await supabase.auth.getSession() : null;
-      const userId = auth?.data.session?.user.id;
+      const userId = await getCurrentUserId();
       const generated = await generateReport(sessionId, userId);
       setReport(generated);
       saveReportToBrowser(generated);
@@ -82,6 +116,7 @@ export function useChat() {
     location,
     setLocation,
     send,
+    sendVoice,
     createReport,
     clearChat,
     canGenerateReport

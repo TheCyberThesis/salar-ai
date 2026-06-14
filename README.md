@@ -17,7 +17,7 @@ This is not a lawyer replacement. The frontend and generated reports include the
 - Database/Auth/Storage: Supabase PostgreSQL/Auth/Storage
 - RAG: Supabase PostgreSQL with pgvector
 - Maps: Google Maps API boundary with safe Google Maps search fallback
-- AI: Gemini/Grok provider abstraction with mock fallback when keys are missing
+- AI: Gemini 3.5 Flash primary for Roman Urdu/text and voice-message processing, Grok as last-resort text fallback, mock fallback when keys are missing
 
 ## Run Locally
 
@@ -40,6 +40,8 @@ npm run dev
 ```
 
 Open `http://localhost:3000`. The frontend expects the API at `http://localhost:8000` by default.
+
+For real AI calls, set `GEMINI_API_KEY` in `apps/api/.env`. The default model is `gemini-3.5-flash` for chat/report text and voice-message transcription. Set `GROK_API_KEY` only as a backup; the backend calls Grok after Gemini is unavailable or fails.
 
 ## Edit These First
 
