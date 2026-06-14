@@ -1,0 +1,110 @@
+[
+  {
+    "name": "Pakistan Telecommunication Authority",
+    "authority_type": "federal_regulator",
+    "domain": "pta.gov.pk",
+    "base_url": "https://www.pta.gov.pk/",
+    "category": "lost_or_stolen_phone",
+    "jurisdiction": "Pakistan",
+    "is_official": true
+  },
+  {
+    "name": "DIRBS / PTA Mobile Device Guidance",
+    "authority_type": "federal_regulator",
+    "domain": "pta.gov.pk",
+    "base_url": "https://www.pta.gov.pk/",
+    "category": "lost_or_stolen_phone",
+    "jurisdiction": "Pakistan",
+    "is_official": true
+  },
+  {
+    "name": "Islamabad Capital Police",
+    "authority_type": "police",
+    "domain": "islamabadpolice.gov.pk",
+    "base_url": "https://islamabadpolice.gov.pk/",
+    "category": "lost_or_stolen_items",
+    "jurisdiction": "Islamabad",
+    "is_official": true
+  },
+  {
+    "name": "Punjab Police",
+    "authority_type": "police",
+    "domain": "punjabpolice.gov.pk",
+    "base_url": "https://punjabpolice.gov.pk/",
+    "category": "lost_or_stolen_items",
+    "jurisdiction": "Punjab",
+    "is_official": true
+  },
+  {
+    "name": "Police Khidmat Markaz Punjab",
+    "authority_type": "public_service_portal",
+    "domain": "pkm.punjab.gov.pk",
+    "base_url": "https://pkm.punjab.gov.pk/",
+    "category": "loss_report",
+    "jurisdiction": "Punjab",
+    "is_official": true
+  },
+  {
+    "name": "Citizen Police Liaison Committee",
+    "authority_type": "public_safety_service",
+    "domain": "cplc.org.pk",
+    "base_url": "https://www.cplc.org.pk/",
+    "category": "mobile_lost_stolen",
+    "jurisdiction": "Sindh/Karachi where applicable",
+    "is_official": true
+  },
+  {
+    "name": "National Electric Power Regulatory Authority",
+    "authority_type": "federal_regulator",
+    "domain": "nepra.org.pk",
+    "base_url": "https://nepra.org.pk/",
+    "category": "electricity_bill_overcharging",
+    "jurisdiction": "Pakistan",
+    "is_official": true
+  },
+  {
+    "name": "Oil and Gas Regulatory Authority",
+    "authority_type": "federal_regulator",
+    "domain": "ogra.org.pk",
+    "base_url": "https://ogra.org.pk/",
+    "category": "gas_bill_overcharging",
+    "jurisdiction": "Pakistan",
+    "is_official": true
+  },
+  {
+    "name": "K-Electric",
+    "authority_type": "utility_provider",
+    "domain": "ke.com.pk",
+    "base_url": "https://www.ke.com.pk/",
+    "category": "electricity_bill_overcharging",
+    "jurisdiction": "Karachi/service areas",
+    "is_official": true
+  },
+  {
+    "name": "Sui Northern Gas Pipelines Limited",
+    "authority_type": "utility_provider",
+    "domain": "sngpl.com.pk",
+    "base_url": "https://www.sngpl.com.pk/",
+    "category": "gas_bill_overcharging",
+    "jurisdiction": "Punjab/KP/service areas",
+    "is_official": true
+  },
+  {
+    "name": "Sui Southern Gas Company",
+    "authority_type": "utility_provider",
+    "domain": "ssgc.com.pk",
+    "base_url": "https://www.ssgc.com.pk/",
+    "category": "gas_bill_overcharging",
+    "jurisdiction": "Sindh/Balochistan/service areas",
+    "is_official": true
+  },
+  {
+    "name": "Federal Ombudsperson Secretariat for Protection Against Harassment",
+    "authority_type": "federal_ombudsperson",
+    "domain": "fospah.gov.pk",
+    "base_url": "https://www.fospah.gov.pk/",
+    "category": "workplace_harassment_women",
+    "jurisdiction": "Pakistan",
+    "is_official": true
+  }
+]

@@ -1,0 +1,1 @@
+"""Salaar AI FastAPI backend."""

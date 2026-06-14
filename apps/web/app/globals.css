@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --background: #f8fbfa;
+  --foreground: #102027;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at 20% 8%, rgba(21, 127, 99, 0.08), transparent 32rem),
+    linear-gradient(180deg, #f8fbfa 0%, #eef7f4 100%);
+  color: var(--foreground);
+  font-family: Inter, Arial, sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+.focus-ring {
+  @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-civic-blue focus-visible:ring-offset-2;
+}
+
+.civic-grid {
+  background-image:
+    linear-gradient(rgba(24, 100, 171, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(24, 100, 171, 0.06) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
