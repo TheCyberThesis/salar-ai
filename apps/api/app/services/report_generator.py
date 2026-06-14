@@ -22,10 +22,10 @@ REQUIRED_DOCUMENTS: dict[str, list[str]] = {
     "stolen_bike": ["CNIC copy", "vehicle registration book/card", "number plate", "model/color details", "last known location and incident date/time"],
     "lost_car": ["CNIC copy", "vehicle registration book/card", "number plate", "chassis/engine number if available", "last known location and incident date/time"],
     "stolen_car": ["CNIC copy", "vehicle registration book/card", "number plate", "chassis/engine number if available", "last known location and incident date/time"],
-    "electricity_bill_overcharging": ["Current bill copy", "previous bill copy", "reference/customer number", "current meter reading photo", "CNIC/contact details if provider requires"],
-    "gas_bill_overcharging": ["Current bill copy", "previous bill copy", "consumer/customer number", "current meter reading photo", "CNIC/contact details if provider requires"],
-    "water_bill_overcharging": ["Current bill copy", "previous bill copy", "consumer/account number", "current meter reading photo if applicable", "CNIC/contact details if authority requires"],
-    "workplace_harassment_women": ["High-level incident summary", "dates/times", "workplace/organization details", "accused role/designation", "evidence or witnesses if available", "copies of relevant communications if safe to preserve"],
+    "electricity_bill_overcharging": ["CNIC copy", "Current bill copy", "previous bill copy", "reference/customer number", "current meter reading photo"],
+    "gas_bill_overcharging": ["CNIC copy", "Current bill copy", "previous bill copy", "consumer/customer number", "current meter reading photo"],
+    "water_bill_overcharging": ["CNIC copy", "Current bill copy", "previous bill copy", "consumer/account number", "current meter reading photo if applicable"],
+    "workplace_harassment_women": ["CNIC copy", "High-level incident summary", "dates/times", "workplace/organization details", "accused role/designation", "evidence or witnesses if any", "copies of relevant communications if safe to preserve"],
 }
 
 
@@ -81,6 +81,24 @@ def _reporting_office(subcategory: str | None, data: dict[str, Any]) -> str:
     if subcategory == "workplace_harassment_women":
         return data.get("workplace_name") or "Workplace inquiry committee / competent authority"
     return "Relevant office"
+
+
+def _residence_proof_document(data: dict[str, Any]) -> str:
+    residence_status = str(data.get("residence_status") or "").lower()
+    if residence_status in {"rented", "tenant"}:
+        return "Proof of residency/residence (tenant/rented): rent or tenancy agreement plus a recent utility bill for the address if available"
+    if residence_status in {"owned", "owner"}:
+        return "Proof of residency/residence and ownership (owner): property ownership document such as registry, allotment letter, mutation/transfer record, or tax record plus a recent utility bill"
+    return "Proof of residency/residence: if rented, rent/tenancy agreement plus recent utility bill; if owned, ownership document such as registry/allotment/mutation record plus recent utility bill"
+
+
+def _required_documents(subcategory: str | None, data: dict[str, Any]) -> list[str]:
+    documents = list(REQUIRED_DOCUMENTS.get(subcategory or "", []))
+    if documents and not any("cnic" in document.lower() for document in documents):
+        documents.insert(0, "CNIC copy")
+    if documents:
+        documents.append(_residence_proof_document(data))
+    return documents
 
 
 def _procedure(subcategory: str | None) -> list[str]:
@@ -195,7 +213,7 @@ def generate_report(session: dict[str, Any]) -> dict[str, Any]:
         "report_recipient": report_recipient,
         "user_provided_details": data,
         "missing_information": missing,
-        "required_documents": REQUIRED_DOCUMENTS.get(subcategory or "", []),
+        "required_documents": _required_documents(subcategory, data),
         "step_by_step_procedure": _procedure(subcategory),
         "complaint_draft": generate_complaint_draft(
             subcategory,

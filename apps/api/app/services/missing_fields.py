@@ -271,6 +271,16 @@ def _fill_workplace_harassment_fields(lines: list[str], lower: str, updated: dic
             updated["internal_committee_available"] = _normalize_yes_no(committee_match.group(1))
 
 
+def _infer_residence_status(lower: str) -> str | None:
+    if re.search(r"\b(rented|renting|tenant|tenancy|kiraye|kiraya)\b", lower):
+        return "rented"
+    if re.search(r"\b(my\s+own|owned|ownership)\b.*\b(home|house|flat|apartment|property|residence)\b", lower):
+        return "owned"
+    if re.search(r"\b(home|house|flat|apartment|property|residence)\b.*\b(my\s+own|owned|ownership)\b", lower):
+        return "owned"
+    return None
+
+
 def infer_fields_from_message(message: str, existing: dict[str, Any], subcategory: str | None) -> dict[str, Any]:
     text = message.strip()
     lower = text.lower()
@@ -365,6 +375,10 @@ def infer_fields_from_message(message: str, existing: dict[str, Any], subcategor
             if provider.lower() in lower:
                 updated["provider"] = provider
                 break
+
+    residence_status = _infer_residence_status(lower)
+    if residence_status:
+        updated["residence_status"] = residence_status
 
     if subcategory in {"lost_phone", "stolen_phone"} and not updated.get("sim_number_or_operator"):
         operators = [operator for operator in ["Jazz", "Zong", "Telenor", "Ufone", "Onic", "SCO"] if operator.lower() in lower]

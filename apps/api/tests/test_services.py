@@ -161,6 +161,70 @@ def test_privacy_masking() -> None:
     assert "03XX-XXXXXXX" in masked
 
 
+def test_required_documents_include_rented_residence_proof() -> None:
+    session = _complete_phone_session()
+    session["collected_data"] = infer_fields_from_message(
+        "I live in a rented house as a tenant.",
+        session["collected_data"],
+        "stolen_phone",
+    )
+
+    report = generate_report(session)
+
+    assert "CNIC copy" in report["required_documents"]
+    assert any("tenant/rented" in document for document in report["required_documents"])
+    assert any("rent or tenancy agreement" in document for document in report["required_documents"])
+
+
+def test_required_documents_include_owned_residence_proof() -> None:
+    session = _complete_phone_session()
+    session["subcategory"] = "electricity_bill_overcharging"
+    session["category"] = "utility_bill_overcharging"
+    session["collected_data"] = {
+        "provider": "IESCO",
+        "reference_or_customer_number": "123456789",
+        "bill_month": "June 2026",
+        "amount_charged": "12000",
+        "current_meter_reading": "4567",
+        "meter_photo_available": "yes",
+        "city": "Islamabad",
+        "consumer_name": "Muhammad Haris",
+        "address": "G-11/1 Islamabad",
+        "residence_status": "owned",
+    }
+
+    report = generate_report(session)
+
+    assert "CNIC copy" in report["required_documents"]
+    assert any("residency/residence and ownership" in document for document in report["required_documents"])
+    assert any("registry" in document and "allotment" in document for document in report["required_documents"])
+
+
+def test_required_documents_include_residency_proof_for_workplace_complaint() -> None:
+    session = {
+        "id": "22222222-2222-2222-2222-222222222222",
+        "category": "workplace_harassment_women",
+        "subcategory": "workplace_harassment_women",
+        "location": {"city": "Islamabad"},
+        "collected_data": {
+            "immediate_safety_risk": "no",
+            "complainant_name": "Alina Nawaz",
+            "workplace_name": "Jazz headquarters F8 markaz islamabad",
+            "city": "Islamabad",
+            "nature_of_issue_high_level": "My boss tried to touch me inappropriately",
+            "incident_dates": "tomorrow at 3:30pm after lunch",
+            "accused_role": "Project lead",
+            "evidence_or_witnesses": "video evidence",
+            "internal_committee_available": "yes",
+        },
+    }
+
+    report = generate_report(session)
+
+    assert "CNIC copy" in report["required_documents"]
+    assert any("Proof of residency/residence" in document for document in report["required_documents"])
+
+
 def test_report_uses_resolved_police_station_and_sho() -> None:
     session = _complete_phone_session()
     session["subcategory"] = "lost_phone"
