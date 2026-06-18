@@ -11,7 +11,8 @@ logger = logging.getLogger(__name__)
 def _query_for_department(*, subcategory: str | None, city: str | None = None, area: str | None = None, provider: str | None = None) -> str:
     location = " ".join(part for part in [city, "Pakistan"] if part)
     if subcategory in {"lost_phone", "stolen_phone", "lost_bike", "stolen_bike", "lost_car", "stolen_car"}:
-        return f"nearest police station {location}"
+        incident_location = " ".join(part for part in [area, city, "Pakistan"] if part)
+        return f"nearest police station {incident_location}"
     if subcategory == "electricity_bill_overcharging":
         name = provider or "electricity"
         return f"{name} customer service complaint office {location}"
