@@ -33,7 +33,7 @@ _FIELD_DESCRIPTIONS: dict[str, str] = {
     "sim_number_or_operator": "Mobile network operator(s) whose SIM(s) were in the phone (Jazz, Zong, Telenor, Ufone, etc.)",
     "city": "City where the incident occurred",
     "applicant_name": "Full name to appear on the complaint/application",
-    "applicant_contact": "Active phone number for police follow-up",
+    "applicant_contact": "Active phone number for follow-up contact",
     "draft_language": "Preferred language for complaint draft: 'english', 'urdu', or 'roman_urdu'",
     "vehicle_registration_number": "Vehicle registration plate/number",
     "vehicle_model_color": "Vehicle make, model, and color",

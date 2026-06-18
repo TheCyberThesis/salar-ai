@@ -8,19 +8,22 @@ from app.maps.maps_fallback import build_maps_search_link
 logger = logging.getLogger(__name__)
 
 
-def _query_for_department(*, subcategory: str | None, city: str | None = None, area: str | None = None) -> str:
-    location = " ".join(part for part in [area, city, "Pakistan"] if part)
+def _query_for_department(*, subcategory: str | None, city: str | None = None, area: str | None = None, provider: str | None = None) -> str:
+    location = " ".join(part for part in [city, "Pakistan"] if part)
     if subcategory in {"lost_phone", "stolen_phone", "lost_bike", "stolen_bike", "lost_car", "stolen_car"}:
-        return f"nearest police station near {location or 'Pakistan'}"
+        return f"nearest police station {location}"
     if subcategory == "electricity_bill_overcharging":
-        return f"electricity customer service center near {location or 'Pakistan'}"
+        name = provider or "electricity"
+        return f"{name} customer service complaint office {location}"
     if subcategory == "gas_bill_overcharging":
-        return f"gas customer service center near {location or 'Pakistan'}"
+        name = provider or "gas"
+        return f"{name} customer service complaint office {location}"
     if subcategory == "water_bill_overcharging":
-        return f"WASA water complaint office near {location or 'Pakistan'}"
+        name = provider or "WASA"
+        return f"{name} water complaint office {location}"
     if subcategory == "workplace_harassment_women":
-        return f"FOSPAH harassment ombudsperson office near {location or 'Pakistan'}"
-    return f"public service office near {location or 'Pakistan'}"
+        return f"FOSPAH harassment ombudsperson office {location}"
+    return f"public service office {location}"
 
 
 def _fallback_location(*, subcategory: str | None, city: str | None = None, area: str | None = None, notes: str | None = None) -> dict[str, str | float | None]:
@@ -36,12 +39,13 @@ def _fallback_location(*, subcategory: str | None, city: str | None = None, area
     }
 
 
-async def find_relevant_department_location(*, subcategory: str | None, city: str | None = None, area: str | None = None) -> dict[str, str | float | None]:
+async def find_relevant_department_location(*, subcategory: str | None, city: str | None = None, area: str | None = None, provider: str | None = None) -> dict[str, str | float | None]:
     settings = get_settings()
     if not settings.google_maps_api_key:
         return _fallback_location(subcategory=subcategory, city=city, area=area)
 
-    query = _query_for_department(subcategory=subcategory, city=city, area=area)
+    query = _query_for_department(subcategory=subcategory, city=city, area=area, provider=provider)
+    logger.info("Google Places query: %s", query)
     field_mask = ",".join(
         [
             "places.id",

@@ -20,11 +20,11 @@ class Settings(BaseSettings):
     ai_provider: Literal["gemini", "grok", "mock"] = "gemini"
     ai_enable_grok_fallback: bool = True
     gemini_api_key: str | None = None
-    gemini_default_model: str = "gemini-3.5-flash"
-    gemini_complex_model: str = "gemini-3.5-flash"
-    gemini_audio_model: str = "gemini-3.5-flash"
+    gemini_default_model: str = "gemini-2.0-flash"
+    gemini_complex_model: str = "gemini-2.0-flash"
+    gemini_audio_model: str = "gemini-2.0-flash"
     grok_api_key: str | None = None
-    grok_model: str = "grok-4.3"
+    grok_model: str = "grok-3-mini"
 
     rate_limit_per_minute: int = 20
 

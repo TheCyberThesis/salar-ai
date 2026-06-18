@@ -1,7 +1,11 @@
+import logging
+
 import httpx
 
 from app.ai.base import AIMessage, AIProvider, AIProviderUnavailable, LLMNetworkError, LLMResponseError
 from app.config import get_settings
+
+logger = logging.getLogger(__name__)
 
 
 class GrokProvider(AIProvider):
@@ -32,8 +36,9 @@ class GrokProvider(AIProvider):
         except (httpx.ConnectError, httpx.TimeoutException) as exc:
             raise LLMNetworkError(f"Grok unreachable: {exc}") from exc
         except httpx.HTTPStatusError as exc:
+            logger.error("Grok API error %s: %s", exc.response.status_code, exc.response.text)
             raise LLMResponseError(
-                f"Grok API error {exc.response.status_code}"
+                f"Grok API error {exc.response.status_code}: {exc.response.text}"
             ) from exc
         except Exception as exc:
             raise LLMResponseError(f"Grok request failed: {exc}") from exc

@@ -34,6 +34,7 @@ async def generate(payload: GenerateReportRequest) -> ReportResponse:
         subcategory=session.get("subcategory"),
         city=data.get("city") or location.get("city"),
         area=data.get("last_known_location") or location.get("area"),
+        provider=data.get("provider") or data.get("utility_provider"),
     )
     report = apply_department_location(report, department_location, session)
     try:

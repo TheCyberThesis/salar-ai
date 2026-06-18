@@ -25,13 +25,16 @@ async def generate_text_with_fallback(
         try:
             return await GeminiProvider().generate(messages, complex_case=complex_case)
         except Exception as exc:  # pragma: no cover - external provider path
-            logger.warning("Gemini generation failed; considering fallback: %s", exc)
+            logger.warning("Gemini failed (field extraction); trying Grok fallback: %s", exc)
 
     if settings.ai_enable_grok_fallback and settings.grok_api_key:
+        logger.info("Using Grok fallback (field extraction)")
         try:
-            return await GrokProvider().generate(messages, complex_case=complex_case)
+            result = await GrokProvider().generate(messages, complex_case=complex_case)
+            logger.info("Grok fallback succeeded (field extraction)")
+            return result
         except Exception as exc:  # pragma: no cover - external provider path
-            logger.warning("Grok fallback failed; using mock response: %s", exc)
+            logger.warning("Grok fallback failed (field extraction): %s", exc)
 
     if fallback_text is not None:
         return fallback_text
@@ -66,8 +69,11 @@ async def generate_chat_reply(
             logger.warning("Gemini generation failed: %s", exc)
 
     if settings.ai_enable_grok_fallback and settings.grok_api_key:
+        logger.info("Using Grok fallback (chat/report)")
         try:
-            return await GrokProvider().generate(messages, complex_case=complex_case)
+            result = await GrokProvider().generate(messages, complex_case=complex_case)
+            logger.info("Grok fallback succeeded (chat/report)")
+            return result
         except LLMNetworkError as exc:
             had_network_error = True
             logger.warning("Grok network error: %s", exc)

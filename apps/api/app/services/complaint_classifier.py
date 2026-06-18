@@ -79,6 +79,11 @@ def classify_complaint(message: str, language_hint: str | None = None) -> Classi
     if _has_any(text, ["water", "wasa", "pani", "پانی"]):
         return Classification(language, "utility_bill_overcharging", "water_bill_overcharging", 0.82, "low")
 
+    bill_terms = ["bill", "بل"]
+    overcharge_terms = ["zyada", "ziada", "ziyada", "bohat", "overcharge", "mehnga", "zada", "zyada", "غلط", "زیادہ", "high", "extra"]
+    if _has_any(text, bill_terms) and _has_any(text, overcharge_terms):
+        return Classification(language, "utility_bill_overcharging", "electricity_bill_overcharging", 0.78, "low")
+
     if _has_any(text, ["harassment", "harass", "harras", "office", "workplace", "boss", "colleague", "ہراسانی"]):
         return Classification(language, "workplace_harassment_women", "workplace_harassment_women", 0.87, "high")
 

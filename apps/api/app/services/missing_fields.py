@@ -75,6 +75,7 @@ REQUIRED_FIELDS: dict[str, list[str]] = {
         "city",
         "consumer_name",
         "address",
+        "applicant_contact",
     ],
     "gas_bill_overcharging": [
         "provider",
@@ -86,6 +87,7 @@ REQUIRED_FIELDS: dict[str, list[str]] = {
         "city",
         "consumer_name",
         "address",
+        "applicant_contact",
     ],
     "water_bill_overcharging": [
         "provider",
@@ -96,6 +98,7 @@ REQUIRED_FIELDS: dict[str, list[str]] = {
         "city",
         "consumer_name",
         "address",
+        "applicant_contact",
     ],
     "workplace_harassment_women": [
         "immediate_safety_risk",
@@ -129,7 +132,7 @@ FIELD_QUESTIONS: dict[str, str] = {
     "sim_number_or_operator": "Which SIM/mobile operator was in the phone?",
     "city": "Which city and area are relevant?",
     "applicant_name": "What name should appear on the complaint draft?",
-    "applicant_contact": "What active contact number should the police use for follow-up?",
+    "applicant_contact": "What is your contact number for follow-up?",
     "draft_language": "Do you want the complaint draft in English, Urdu, or Roman Urdu?",
     "vehicle_registration_number": "What is the vehicle registration or number plate?",
     "vehicle_model_color": "What is the vehicle model and color?",
@@ -347,7 +350,7 @@ def infer_fields_from_message(message: str, existing: dict[str, Any], subcategor
         if name_match:
             updated["applicant_name"] = name_match.group(1).strip().title()
 
-    if subcategory in {"lost_phone", "stolen_phone"} and not updated.get("applicant_contact"):
+    if not updated.get("applicant_contact"):
         contact_match = re.search(r"\b(?:\+92|0)?3\d{2}[- ]?\d{7}\b", text)
         if contact_match:
             updated["applicant_contact"] = contact_match.group(0)

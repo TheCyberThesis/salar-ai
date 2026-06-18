@@ -116,7 +116,7 @@ async def process_chat_message(payload: ChatRequest) -> ChatResponse:
         missing_fields = get_missing_fields(session.get("subcategory"), session["collected_data"])
         question_limit = len(missing_fields) if session.get("subcategory") in {"lost_phone", "stolen_phone"} else 6
         questions = questions_for_fields(missing_fields, limit=question_limit)
-        sources = retrieve_knowledge(session["category"], session.get("subcategory"), city=session["collected_data"].get("city"))
+        sources = retrieve_knowledge(session["category"], session.get("subcategory"), city=session["collected_data"].get("city"), provider=session["collected_data"].get("provider"))
         if missing_fields:
             session["stage"] = "collecting_missing_info"
             prefix = "I can help with this. "

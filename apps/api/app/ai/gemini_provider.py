@@ -1,7 +1,11 @@
+import logging
+
 import httpx
 
 from app.ai.base import AIMessage, AIProvider, AIProviderUnavailable, LLMNetworkError, LLMResponseError
 from app.config import get_settings
+
+logger = logging.getLogger(__name__)
 
 
 class GeminiProvider(AIProvider):
