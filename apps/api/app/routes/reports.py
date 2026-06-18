@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException
 from app.ai.base import LLMNetworkError, LLMResponseError
 from app.database import memory_store, persist_generated_report
 from app.maps.google_maps import find_relevant_department_location
+from app.rag.source_selector import select_sources
 from app.schemas import GenerateReportRequest, ReportResponse
 from app.services.ai_assistant import enhance_report_with_ai
 from app.services.missing_fields import get_missing_fields
@@ -30,6 +31,12 @@ async def generate(payload: GenerateReportRequest) -> ReportResponse:
     report = generate_report(session)
     data = session.get("collected_data", {})
     location = session.get("location", {})
+    report["sources_used"] = session.get("verified_sources") or await select_sources(
+        category=session.get("category", ""),
+        subcategory=session.get("subcategory"),
+        city=data.get("city") or location.get("city"),
+        provider=data.get("provider"),
+    )
     department_location = await find_relevant_department_location(
         subcategory=session.get("subcategory"),
         city=data.get("city") or location.get("city"),

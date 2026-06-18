@@ -363,9 +363,10 @@ def infer_fields_from_message(message: str, existing: dict[str, Any], subcategor
         elif "urdu" in lower:
             updated["draft_language"] = "urdu"
 
-    money_match = re.search(r"(?:rs\.?|pkr)?\s?(\d{3,8})", lower)
-    if money_match and "bill" in lower:
-        updated["amount_charged"] = money_match.group(1)
+    if not updated.get("amount_charged"):
+        money_match = re.search(r"(?:rs\.?\s*|pkr\s*)(\d{3,8})|\b(\d{3,8})\b", lower)
+        if money_match and "bill" in lower:
+            updated["amount_charged"] = money_match.group(1) or money_match.group(2)
 
     if any(city in lower for city in ["karachi", "lahore", "islamabad", "rawalpindi", "peshawar", "quetta", "multan"]):
         for city in ["Karachi", "Lahore", "Islamabad", "Rawalpindi", "Peshawar", "Quetta", "Multan"]:

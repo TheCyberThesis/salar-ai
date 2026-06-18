@@ -4,7 +4,7 @@ from uuid import uuid4
 from fastapi import APIRouter, Depends, Request
 
 from app.database import memory_store
-from app.rag.retriever import retrieve_knowledge
+from app.rag.source_selector import select_sources
 from app.schemas import ChatRequest, ChatResponse
 from app.services.ai_assistant import extract_fields_with_llm, generate_guidance_reply
 from app.services.complaint_classifier import classify_complaint
@@ -116,7 +116,23 @@ async def process_chat_message(payload: ChatRequest) -> ChatResponse:
         missing_fields = get_missing_fields(session.get("subcategory"), session["collected_data"])
         question_limit = len(missing_fields) if session.get("subcategory") in {"lost_phone", "stolen_phone"} else 6
         questions = questions_for_fields(missing_fields, limit=question_limit)
-        sources = retrieve_knowledge(session["category"], session.get("subcategory"), city=session["collected_data"].get("city"), provider=session["collected_data"].get("provider"))
+        source_cache_key = (
+            session.get("category"),
+            session.get("subcategory"),
+            session["collected_data"].get("city"),
+            session["collected_data"].get("provider"),
+        )
+        if session.get("_source_cache_key") != source_cache_key:
+            sources = await select_sources(
+                category=session["category"],
+                subcategory=session.get("subcategory"),
+                city=session["collected_data"].get("city"),
+                provider=session["collected_data"].get("provider"),
+            )
+            session["verified_sources"] = sources
+            session["_source_cache_key"] = source_cache_key
+        else:
+            sources = session.get("verified_sources", [])
         if missing_fields:
             session["stage"] = "collecting_missing_info"
             prefix = "I can help with this. "
